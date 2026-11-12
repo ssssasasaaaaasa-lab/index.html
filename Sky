@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dim">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>摩天樓</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6EBF1; --surface:#F7F9FB; --street:#8492AA; --cell:#FFFFFF; --tall:#8FAAD3;
+  --ink:#15203A; --muted:#566381; --line:#C5CEDB; --lamp:#E7971F; --lamp-soft:#FCEBC8;
+  --bad:#C4402A; --bad-soft:#F8D9D2; --btn:#FFFFFF; --ok:#1F7A5A; --on:#15203A; --on-ink:#FFFFFF;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10172A; --surface:#172038; --street:#060A14; --cell:#1F2A47; --tall:#5273B3;
+    --ink:#EAF0FA; --muted:#9DABC9; --line:#2C3A5E; --lamp:#F5B24A; --lamp-soft:#3D3722;
+    --bad:#FF7A61; --bad-soft:#4A2320; --btn:#1F2A47; --ok:#6FD3A8; --on:#EAF0FA; --on-ink:#10172A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10172A; --surface:#172038; --street:#060A14; --cell:#1F2A47; --tall:#5273B3;
+  --ink:#EAF0FA; --muted:#9DABC9; --line:#2C3A5E; --lamp:#F5B24A; --lamp-soft:#3D3722;
+  --bad:#FF7A61; --bad-soft:#4A2320; --btn:#1F2A47; --ok:#6FD3A8; --on:#EAF0FA; --on-ink:#10172A;
+  color-scheme:dark;
+}
+:root[data-theme="dim"]{
+  --bg:#191613; --surface:#221E1A; --street:#0D0B09; --cell:#2A2521; --tall:#5C4A36;
+  --ink:#E6D8BF; --muted:#A99B85; --line:#42392F; --lamp:#C98A2B; --lamp-soft:#3B301F;
+  --bad:#E57860; --bad-soft:#46241D; --btn:#2A2521; --ok:#8FC49D; --on:#E6D8BF; --on-ink:#191613;
+  color-scheme:dark;
+}
+:root[data-theme="contrast"]{
+  --bg:#000000; --surface:#0C0C0C; --street:#5A5A5A; --cell:#000000; --tall:#27407A;
+  --ink:#FFFFFF; --muted:#D0D0D0; --line:#7A7A7A; --lamp:#FFC83D; --lamp-soft:#3A2E00;
+  --bad:#FF6B57; --bad-soft:#4A0F08; --btn:#000000; --ok:#7CFFB2; --on:#FFFFFF; --on-ink:#000000;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Atkinson Hyperlegible","Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  font-size:17px;line-height:1.6;font-variant-numeric:tabular-nums}
+main{max-width:600px;margin:0 auto;padding:18px 14px 40px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+h1{font-size:1.7rem;margin:0;font-weight:700;letter-spacing:.06em}
+.clock{font-size:1.5rem;font-weight:700;color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+
+.setup{background:var(--surface);border-radius:14px;padding:12px;margin-bottom:14px;display:grid;gap:10px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.row>span{color:var(--muted);font-size:.9rem;min-width:3em}
+.seg{border:2px solid var(--line);background:var(--btn);border-radius:10px;min-width:44px;min-height:44px;padding:4px 12px;font-weight:700}
+.seg[aria-pressed="true"]{background:var(--on);color:var(--on-ink);border-color:var(--on)}
+.go{border:0;background:var(--lamp);color:#15203A;border-radius:10px;min-height:48px;padding:6px 16px;font-weight:700;width:100%}
+
+.board{display:grid;width:100%;aspect-ratio:1;gap:3px;background:var(--street);border:3px solid var(--street);border-radius:10px;
+  grid-template-columns:.6fr repeat(var(--n),1fr) .6fr;grid-template-rows:.6fr repeat(var(--n),1fr) .6fr;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.clue,.corner{background:var(--bg);display:grid;place-items:center;container-type:size;color:var(--muted);font-weight:700;min-width:0;min-height:0}
+.clue span{font-size:min(62cqw,62cqh)}
+.clue.on{color:var(--ink);background:var(--lamp-soft)}
+.cell{--base:var(--cell);--hp:0%;border:0;padding:0;margin:0;min-width:0;min-height:0;position:relative;
+  background:color-mix(in srgb,var(--tall) var(--hp),var(--base));container-type:size;display:grid;place-items:center;border-radius:2px}
+.cell.hl{--base:var(--lamp-soft)}
+.cell.sel{box-shadow:inset 0 0 0 4px var(--lamp);z-index:1}
+.cell.same .v{text-decoration:underline;text-decoration-thickness:.08em;text-underline-offset:.12em}
+.cell.bad{--base:var(--bad-soft);box-shadow:inset 0 0 0 4px var(--bad)}
+.cell.bad.sel{box-shadow:inset 0 0 0 4px var(--bad),inset 0 0 0 7px var(--lamp)}
+.cell.given .v{font-weight:700}
+.cell.given::after{content:"";position:absolute;right:8%;top:8%;width:12%;height:12%;border-radius:50%;background:var(--muted)}
+.v{font-size:62cqw;font-weight:700;line-height:1}
+.m{position:absolute;inset:6%;display:grid;grid-template-columns:repeat(var(--mc),1fr);grid-auto-rows:1fr}
+.m i{font-style:normal;font-weight:700;display:grid;place-items:center;font-size:calc(74cqw / var(--mc));line-height:1;color:var(--ink)}
+
+.status{min-height:2.6em;margin:12px 2px 8px;font-weight:500}
+.status.ok{color:var(--ok);font-weight:700}
+.status.no{color:var(--bad);font-weight:700}
+
+.pad{display:grid;gap:8px}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wrap{position:relative}
+.ink{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:10px}
+.wrap.draw .ink.active{pointer-events:auto;touch-action:none;cursor:crosshair}
+.doodle{display:none;gap:10px;background:var(--surface);border-radius:14px;padding:12px}
+.pad.draw .doodle{display:grid}
+.pad.draw .digits,.pad.draw #erase,.pad.draw #check{display:none}
+.pad.draw .tools{grid-template-columns:1fr}
+.sw{width:46px;height:46px;border-radius:50%;border:3px solid var(--line);background:var(--c);padding:0}
+.sw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--lamp)}
+.lay{display:flex;gap:4px;margin-right:6px}
+.fills{display:none;gap:10px;background:var(--surface);border-radius:14px;padding:12px}
+.pad.paintm .fills{display:grid}
+.pad.paintm .digits,.pad.paintm #erase,.pad.paintm #check{display:none}
+.pad.paintm .tools{grid-template-columns:1fr}
+.fsw{width:46px;height:46px;border-radius:10px;border:3px solid var(--line);background:var(--c);padding:0}
+.fsw[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 0 0 3px var(--lamp)}
+.hint{margin:0;color:var(--muted);font-size:.92rem}
+input[type=range]{flex:1;min-width:130px;height:44px;accent-color:var(--lamp)}
+.dotbox{width:40px;height:40px;display:grid;place-items:center}
+.dot{border-radius:50%;background:var(--ink);display:block}
+.mode{border:2px solid var(--line);background:var(--btn);border-radius:12px;min-height:52px;font-weight:700;font-size:1rem;padding:2px}
+.mode[aria-pressed="true"]{background:var(--on);color:var(--on-ink);border-color:var(--on)}
+.digits{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:6px}
+.digit{border:2px solid var(--line);background:var(--btn);border-radius:12px;min-height:56px;font-weight:700;font-size:1.5rem;padding:0}
+.digit[aria-pressed="true"]{border-color:var(--lamp);box-shadow:inset 0 0 0 2px var(--lamp)}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tool{border:2px solid var(--line);background:var(--btn);border-radius:12px;min-height:50px;font-weight:700}
+.tool:disabled,.digit:disabled{opacity:.45;cursor:default}
+
+details{margin-top:18px;background:var(--surface);border-radius:14px;padding:10px 14px}
+summary{cursor:pointer;font-weight:700}
+details ul{margin:8px 0 4px;padding-left:1.2em}
+details li{margin-bottom:6px}
+label.chk{display:flex;gap:10px;align-items:center;min-height:44px}
+label.chk input{width:22px;height:22px;accent-color:var(--lamp)}
+@media (prefers-reduced-motion:no-preference){ .cell{transition:background-color .12s} }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>摩天樓</h1>
+    <div class="clock" id="clock" aria-label="用時">00:00</div>
+  </div>
+
+  <div class="setup">
+    <div class="row" id="sizes"><span>尺寸</span></div>
+    <div class="row" id="levels"><span>線索</span>
+      <button class="seg" data-level="0">全給</button>
+      <button class="seg" data-level="1">少給</button>
+    </div>
+    <div class="row" id="themes"><span>顏色</span>
+      <button class="seg" data-theme-pick="dim">柔暗</button>
+      <button class="seg" data-theme-pick="contrast">黑底白字</button>
+      <button class="seg" data-theme-pick="dark">藍夜</button>
+      <button class="seg" data-theme-pick="light">亮</button>
+    </div>
+    <button class="go" id="newBtn">蓋新的一題</button>
+  </div>
+
+  <div class="wrap" id="wrap"><div class="board" id="board" role="grid" aria-label="棋盤"></div></div>
+
+  <div class="status" id="status" role="status"></div>
+
+  <div class="pad" id="pad">
+    <div class="modes">
+      <button class="mode" id="modeFill" aria-pressed="true">填樓高</button>
+      <button class="mode" id="modeMark" aria-pressed="false">做標記</button>
+      <button class="mode" id="modePaint" aria-pressed="false">塗格子</button>
+      <button class="mode" id="modeDraw" aria-pressed="false">塗鴉</button>
+    </div>
+    <div class="doodle" id="doodle">
+      <div class="row" id="pens"><span>筆</span></div>
+      <div class="row"><span>粗細</span>
+        <input type="range" id="penW" min="1" max="12" step="1" value="2" aria-label="筆的粗細">
+        <span class="dotbox"><i class="dot" id="dot"></i></span>
+        <button class="seg" id="rubber" aria-pressed="false">橡皮擦</button>
+      </div>
+      <div class="row" id="layers"><span>圖層</span></div>
+      <button class="tool" id="clearLayer">清空這一層</button>
+    </div>
+    <div class="fills" id="fills">
+      <div class="row" id="fillRow"><span>底色</span></div>
+      <p class="hint">選一個顏色，再點格子。同一色再點一次就擦掉。數字會在顏色上面。</p>
+      <button class="tool" id="clearFills">底色全部清掉</button>
+    </div>
+    <div class="digits" id="digits"></div>
+    <div class="tools">
+      <button class="tool" id="erase">擦掉這格</button>
+      <button class="tool" id="undo">退一步</button>
+      <button class="tool" id="check">檢查</button>
+    </div>
+  </div>
+
+  <details>
+    <summary>規則和設定</summary>
+    <ul>
+      <li>每一橫排、每一直排，樓高 1 到 N 各出現一次。</li>
+      <li>邊上的數字：從那裡看進去，看得到幾棟。高樓會擋住後面的矮樓。</li>
+      <li>邊上空白，就是那裡沒有線索。</li>
+      <li>每一題都驗過，只有一個答案。</li>
+      <li>塗鴉：直接畫在棋盤上。圖層最多 8 個，可以各自藏起來、清空，換題之前都會留著。</li>
+      <li>鍵盤：方向鍵移動，數字鍵輸入，空白鍵切換「填樓高／做標記」，Backspace 擦掉。</li>
+    </ul>
+    <label class="chk"><input type="checkbox" id="auto"> 填好一格後，自動擦掉同排同列的同號標記</label>
+    <label class="chk"><input type="checkbox" id="tint"> 樓越高，格子顏色越深</label>
+  </details>
+</main>
+
+<script id="logic">
+const Logic=(()=>{
+  const cache={};
+  function build(n){
+    if(cache[n]) return cache[n];
+    let f=1; for(let i=2;i<=n;i++) f*=i;
+    const P=new Uint8Array(f*n), L=new Uint8Array(f), R=new Uint8Array(f);
+    const a=[]; for(let i=0;i<n;i++) a.push(i+1);
+    const c=new Array(n).fill(0); let k=0;
+    const emit=()=>{ let m=0,l=0,r=0;
+      for(let i=0;i<n;i++){ P[k*n+i]=a[i]; if(a[i]>m){m=a[i];l++;} }
+      m=0; for(let i=n-1;i>=0;i--){ if(a[i]>m){m=a[i];r++;} }
+      L[k]=l; R[k]=r; k++; };
+    emit();
+    let i=0;
+    while(i<n){
+      if(c[i]<i){ const j=i%2===0?0:c[i]; const t=a[j]; a[j]=a[i]; a[i]=t; emit(); c[i]++; i=0; }
+      else { c[i]=0; i++; }
+    }
+    return cache[n]={P,L,R,f};
+  }
+  function lineCells(n,li){
+    const out=new Array(n);
+    if(li<n){ for(let i=0;i<n;i++) out[i]=li*n+i; }
+    else { const c=li-n; for(let i=0;i<n;i++) out[i]=i*n+c; }
+    return out;
+  }
+  // 回傳最多 limit 個解
+  function solve(n,clues,givens,limit){
+    const {P,L,R,f}=build(n); const full=(1<<n)-1;
+    const masks0=new Uint16Array(n*n).fill(full);
+    if(givens) for(const k in givens) masks0[k]=1<<(givens[k]-1);
+    const cells=[]; for(let li=0;li<2*n;li++) cells.push(lineCells(n,li));
+    const lists0=[];
+    for(let li=0;li<2*n;li++){
+      const a=li<n?clues.left[li]:clues.top[li-n], b=li<n?clues.right[li]:clues.bottom[li-n];
+      if(!a&&!b){ lists0.push(null); continue; }
+      const arr=[]; for(let p=0;p<f;p++){ if((!a||L[p]===a)&&(!b||R[p]===b)) arr.push(p); }
+      lists0.push(Int32Array.from(arr));
+    }
+    function propagate(masks,lists,dirty){
+      for(;;){
+        let best=-1, bl=Infinity;
+        for(let li=0;li<2*n;li++) if(dirty[li]){ const len=lists[li]?lists[li].length:f; if(len<bl){bl=len;best=li;} }
+        if(best<0) return true;
+        dirty[best]=0;
+        const cs=cells[best], src=lists[best], len=src?src.length:f;
+        const m=new Array(n); let allFull=true;
+        for(let i=0;i<n;i++){ m[i]=masks[cs[i]]; if(m[i]!==full) allFull=false; }
+        if(!src&&allFull) continue;
+        const out=new Int32Array(len); let cnt=0; const nm=new Array(n).fill(0);
+        for(let q=0;q<len;q++){
+          const p=src?src[q]:q, base=p*n; let ok=true;
+          for(let i=0;i<n;i++){ if(!((m[i]>>(P[base+i]-1))&1)){ ok=false; break; } }
+          if(ok){ out[cnt++]=p; for(let i=0;i<n;i++) nm[i]|=1<<(P[base+i]-1); }
+        }
+        if(!cnt) return false;
+        lists[best]=out.slice(0,cnt);
+        for(let i=0;i<n;i++){
+          if(nm[i]!==m[i]){ const cell=cs[i]; masks[cell]=nm[i];
+            dirty[best<n ? n+(cell%n) : (cell/n)|0]=1; }
+        }
+      }
+    }
+    const pop=x=>{ let c=0; while(x){ x&=x-1; c++; } return c; };
+    const sols=[];
+    function rec(masks,lists,dirty){
+      if(sols.length>=limit) return;
+      if(!propagate(masks,lists,dirty)) return;
+      let best=-1, bc=99;
+      for(let k=0;k<n*n;k++){ const pc=pop(masks[k]); if(pc>1&&pc<bc){ bc=pc; best=k; } }
+      if(best<0){ sols.push(Array.from(masks,m=>32-Math.clz32(m))); return; }
+      let m=masks[best];
+      while(m&&sols.length<limit){
+        const b=m&-m; m^=b;
+        const m2=masks.slice(); m2[best]=b;
+        const d=new Uint8Array(2*n); d[(best/n)|0]=1; d[n+(best%n)]=1;
+        rec(m2,lists.slice(),d);
+      }
+    }
+    rec(masks0,lists0,new Uint8Array(2*n).fill(1));
+    return sols;
+  }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  function randomSquare(n){
+    const g=new Array(n*n).fill(0), rows=new Array(n).fill(0), cols=new Array(n).fill(0);
+    let steps=0;
+    function go(k){
+      if(k===n*n) return true;
+      if(++steps>200000) return false;
+      const r=(k/n)|0, c=k%n; const opts=[]; for(let v=1;v<=n;v++) opts.push(v); shuffle(opts);
+      for(const v of opts){ const b=1<<v; if(rows[r]&b||cols[c]&b) continue;
+        g[k]=v; rows[r]|=b; cols[c]|=b;
+        if(go(k+1)) return true;
+        rows[r]^=b; cols[c]^=b; }
+      g[k]=0; return false;
+    }
+    while(!go(0)){ g.fill(0); rows.fill(0); cols.fill(0); steps=0; }
+    return g;
+  }
+  function see(arr){ let m=0,c=0; for(const v of arr){ if(v>m){ m=v; c++; } } return c; }
+  function cluesOf(n,g){
+    const top=[],bottom=[],left=[],right=[];
+    for(let i=0;i<n;i++){
+      const row=g.slice(i*n,i*n+n), col=[]; for(let r=0;r<n;r++) col.push(g[r*n+i]);
+      left.push(see(row)); right.push(see(row.slice().reverse()));
+      top.push(see(col)); bottom.push(see(col.slice().reverse()));
+    }
+    return {top,bottom,left,right};
+  }
+  function makePuzzle(n,level,budgetMs){
+    let g, clues, givens={};
+    for(let tries=0;;tries++){
+      g=randomSquare(n); clues=cluesOf(n,g);
+      let s=solve(n,clues,null,2);
+      if(s.length===1) break;
+      if(tries>=(n<=6?25:2)){
+        // 大尺寸光靠邊上的線索常常不只一解：補幾格已知的樓高，補到只剩一解
+        while(s.length>1){ const diff=[]; for(let k=0;k<n*n;k++) if(s[0][k]!==s[1][k]) diff.push(k);
+          const k=diff[Math.floor(Math.random()*diff.length)]; givens[k]=g[k]; s=solve(n,clues,givens,2); }
+        // 把多餘的已知格拿掉
+        const t1=Date.now();
+        for(const k of shuffle(Object.keys(givens))){ if(Date.now()-t1>budgetMs/2) break;
+          const v=givens[k]; delete givens[k]; if(solve(n,clues,givens,2).length!==1) givens[k]=v; }
+        break;
+      }
+    }
+    if(level===1){
+      const t0=Date.now(), sides=["top","bottom","left","right"], order=[];
+      for(const s of sides) for(let i=0;i<n;i++) order.push([s,i]);
+      shuffle(order);
+      const target=Math.round(4*n*0.45); let removed=0;
+      for(const [s,i] of order){
+        if(removed>=target||Date.now()-t0>budgetMs) break;
+        const keep=clues[s][i]; clues[s][i]=0;
+        if(solve(n,clues,givens,2).length===1) removed++; else clues[s][i]=keep;
+      }
+    }
+    return {n,level,clues,givens,sol:g};
+  }
+  return {build,solve,cluesOf,randomSquare,makePuzzle};
+})();
+if(typeof module!=="undefined") module.exports=Logic;
+</script>
+
+<script>
+(()=>{
+  const $=s=>document.querySelector(s);
+  const LS="skyscrapers.v1";
+  let S=null, sel=-1, mode="fill", bad=new Set(), undo=[], pend={n:6,level:0}, prefs={auto:true,tint:true,theme:"dim"}, confirmT=null;
+  let D={layers:[[],[],[]],vis:[true,true,true]}, dl=0, pen=1, penV=2, rubber=false, dUndo=[], cur=null, fillPick=1;
+  const PEN={dark:["#E6D8BF","#E0A040","#5FC2C0","#E58AA8","#9BCB6B","#E2685A","#7FA6F0","#B08BE8","#E8D34A","#9A9A9A"],
+             light:["#15203A","#B86A00","#0B7F86","#B8346A","#3F7A1E","#C22F22","#2456C7","#6B3FC0","#8A7400","#6B6B6B"]};
+  const PEN_NAME=["主色","琥珀","青","粉","綠","紅","藍","紫","黃","灰"];
+  const FILL={dark:["#5E2B25","#5C4220","#56511C","#2F4F27","#1F4B49","#294280","#45327C","#5C2849"],
+              light:["#FFD3CB","#FFE2B5","#FFF2A8","#D4F0BC","#BFECE5","#CADCFF","#E0CFFA","#F8CCE2"]};
+  const FILL_NAME=["紅","橘","黃","綠","青","藍","紫","粉"];
+  const fpal=()=>FILL[prefs.theme==="light"?"light":"dark"];
+  const pal=()=>PEN[prefs.theme==="light"?"light":"dark"];
+
+  function save(){ try{ localStorage.setItem(LS,JSON.stringify({S,prefs,pend,D})); }catch(e){} }
+  function load(){ try{ const j=JSON.parse(localStorage.getItem(LS)||"null");
+      if(j&&j.S&&j.S.sol&&j.S.vals){ S=j.S; if(j.prefs) prefs=Object.assign(prefs,j.prefs); pend={n:S.n,level:S.level};
+        if(j.D&&Array.isArray(j.D.layers)&&j.D.layers.length>=1&&j.D.layers.length<=8){ D=j.D; if(!Array.isArray(D.vis)) D.vis=[]; while(D.vis.length<D.layers.length) D.vis.push(true); }
+        if(!Array.isArray(S.fill)) S.fill=new Array(S.n*S.n).fill(0); return true; }
+      if(j&&j.prefs) prefs=Object.assign(prefs,j.prefs);
+    }catch(e){} return false; }
+
+  const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+  function say(t,cls){ const el=$("#status"); el.textContent=t; el.className="status"+(cls?" "+cls:""); }
+
+  // ---------- 設定列 ----------
+  const sizes=$("#sizes");
+  for(let n=4;n<=9;n++){ const b=document.createElement("button"); b.className="seg"; b.textContent=n; b.dataset.n=n;
+    b.onclick=()=>{ pend.n=n; paintSetup(); }; sizes.appendChild(b); }
+  document.querySelectorAll("[data-level]").forEach(b=>b.onclick=()=>{ pend.level=+b.dataset.level; paintSetup(); });
+  function applyTheme(){ document.documentElement.setAttribute("data-theme",prefs.theme||"dim");
+    document.querySelectorAll("[data-theme-pick]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.themePick===(prefs.theme||"dim"))); }
+  document.querySelectorAll("[data-theme-pick]").forEach(b=>b.onclick=()=>{ prefs.theme=b.dataset.themePick; applyTheme(); drawAll(); paint(); save(); });
+  function paintSetup(){ applyTheme();
+    document.querySelectorAll("[data-n]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===pend.n));
+    document.querySelectorAll("[data-level]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.level===pend.level));
+  }
+  const inProgress=()=>S&&!S.done&&(S.vals.some(v=>v)||S.marks.some(v=>v));
+  $("#newBtn").onclick=()=>{
+    const b=$("#newBtn");
+    if(inProgress()&&!confirmT){ b.textContent="這題還沒蓋完。再按一次就丟掉";
+      confirmT=setTimeout(()=>{ confirmT=null; b.textContent="蓋新的一題"; },4000); return; }
+    clearTimeout(confirmT); confirmT=null; b.textContent="蓋新的一題";
+    newPuzzle();
+  };
+  function newPuzzle(){
+    say("正在蓋城市，並驗證只有一個答案…"); $("#newBtn").disabled=true;
+    setTimeout(()=>{
+      const p=Logic.makePuzzle(pend.n,pend.level,pend.n>=8?2500:1500);
+      S=Object.assign(p,{vals:new Array(p.n*p.n).fill(0),marks:new Array(p.n*p.n).fill(0),fill:new Array(p.n*p.n).fill(0),elapsed:0,checks:0,done:false,started:false});
+      for(const k in S.givens) S.vals[k]=S.givens[k];
+      sel=-1; bad=new Set(); undo=[]; D={layers:[[],[],[]],vis:[true,true,true]}; dUndo=[]; drawAll(); $("#newBtn").disabled=false;
+      buildBoard(); paint(); save();
+      say("新的一題。點一格開始，計時從第一步算起。");
+    },40);
+  }
+
+  // ---------- 棋盤 ----------
+  let cellEls=[], clueEls={};
+  function buildBoard(){
+    const n=S.n, board=$("#board"); board.innerHTML=""; board.style.setProperty("--n",n);
+    const mc=n<=4?2:3; cellEls=[]; clueEls={top:[],bottom:[],left:[],right:[]};
+    const clue=(side,i)=>{ const d=document.createElement("div"); d.className="clue"; const s=document.createElement("span");
+      const v=S.clues[side][i]; s.textContent=v||""; d.appendChild(s); clueEls[side][i]=d; return d; };
+    const corner=()=>{ const d=document.createElement("div"); d.className="corner"; return d; };
+    board.appendChild(corner()); for(let c=0;c<n;c++) board.appendChild(clue("top",c)); board.appendChild(corner());
+    for(let r=0;r<n;r++){
+      board.appendChild(clue("left",r));
+      for(let c=0;c<n;c++){ const k=r*n+c, b=document.createElement("button"); b.className="cell"; b.style.setProperty("--mc",mc);
+        b.onclick=()=>{ if(mode==="paint"){ paintCell(k); return; } sel=k; paint(); }; cellEls[k]=b; board.appendChild(b); }
+      board.appendChild(clue("right",r));
+    }
+    board.appendChild(corner()); for(let c=0;c<n;c++) board.appendChild(clue("bottom",c)); board.appendChild(corner());
+    const dg=$("#digits"); dg.innerHTML=""; dg.style.setProperty("--n",n);
+    for(let v=1;v<=n;v++){ const b=document.createElement("button"); b.className="digit"; b.textContent=v; b.dataset.v=v;
+      b.onclick=()=>input(v); dg.appendChild(b); }
+  }
+  function paint(){
+    if(!S) return;
+    const n=S.n, sr=sel<0?-1:(sel/n)|0, sc=sel<0?-1:sel%n, sv=sel<0?0:S.vals[sel];
+    for(let k=0;k<n*n;k++){
+      const el=cellEls[k], r=(k/n)|0, c=k%n, v=S.vals[k], given=(k in S.givens);
+      el.className="cell"+(k===sel?" sel":"")+((r===sr||c===sc)&&k!==sel?" hl":"")+(bad.has(k)?" bad":"")+(given?" given":"")+(v&&sv&&v===sv&&k!==sel?" same":"");
+      const fc=S.fill[k];
+      if(fc) el.style.setProperty("--base",fpal()[fc-1]); else el.style.removeProperty("--base");
+      el.style.setProperty("--hp",(v&&prefs.tint&&!fc?Math.round(v/n*55):0)+"%");
+      el.setAttribute("aria-label",`第 ${r+1} 排第 ${c+1} 格，`+(v?`樓高 ${v}`:"空的"));
+      el.textContent="";
+      if(v){ const s=document.createElement("span"); s.className="v"; s.textContent=v; el.appendChild(s); }
+      else if(S.marks[k]){ const m=document.createElement("span"); m.className="m";
+        for(let d=1;d<=n;d++){ const i=document.createElement("i"); i.textContent=(S.marks[k]>>d&1)?d:""; m.appendChild(i); }
+        el.appendChild(m); }
+    }
+    for(let i=0;i<n;i++){
+      clueEls.top[i].classList.toggle("on",i===sc); clueEls.bottom[i].classList.toggle("on",i===sc);
+      clueEls.left[i].classList.toggle("on",i===sr); clueEls.right[i].classList.toggle("on",i===sr);
+    }
+    $("#modeFill").setAttribute("aria-pressed",mode==="fill"); $("#modeMark").setAttribute("aria-pressed",mode==="mark"); $("#modePaint").setAttribute("aria-pressed",mode==="paint");
+    $("#pad").classList.toggle("paintm",mode==="paint");
+    document.querySelectorAll("[data-fill]").forEach(b=>{ b.style.setProperty("--c",fpal()[+b.dataset.fill-1]); b.setAttribute("aria-pressed",+b.dataset.fill===fillPick); });
+    const locked=S.done||sel<0||(sel in S.givens);
+    document.querySelectorAll(".digit").forEach(b=>{ const d=+b.dataset.v; b.disabled=S.done;
+      b.setAttribute("aria-pressed", !locked&&(mode==="fill"?S.vals[sel]===d:!S.vals[sel]&&!!(S.marks[sel]>>d&1))); });
+    $("#undo").disabled=!undo.length||S.done; $("#erase").disabled=locked; $("#check").disabled=S.done;
+    $("#clock").textContent=fmt(S.elapsed);
+    $("#auto").checked=prefs.auto; $("#tint").checked=prefs.tint;
+    paintDoodle();
+  }
+
+  // ---------- 塗鴉 ----------
+  const wrap=$("#wrap"), MAXL=8; let cvs=[], builtLayers=0;
+  const ctx=c=>{ try{ return c.getContext&&c.getContext("2d"); }catch(e){ return null; } };
+  const rnd=v=>Math.round(Math.max(0,Math.min(1,v))*1000)/1000;
+  const penW=()=>Math.round((0.002+penV*0.0025)*10000)/10000;
+  const wOf=s=>s.w===0?0.007:s.w===1?0.016:s.w;
+  function style(x,c,s){ const w=wOf(s); x.globalCompositeOperation=s.e?"destination-out":"source-over"; x.strokeStyle=s.e?"#000":(pal()[s.c]||pal()[0]);
+    x.lineWidth=(s.e?Math.max(0.03,w*3):w)*c.width; x.lineCap="round"; x.lineJoin="round"; }
+  function fit(c){ const r=wrap.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+    c.width=Math.max(1,Math.round(r.width*dpr)); c.height=Math.max(1,Math.round(r.height*dpr)); }
+  const pt=(c,e)=>{ const r=c.getBoundingClientRect(); return [rnd((e.clientX-r.left)/r.width),rnd((e.clientY-r.top)/r.height)]; };
+  function bind(c,i){
+    c.addEventListener("pointerdown",e=>{ if(mode!=="draw"||i!==dl) return; e.preventDefault();
+      try{ c.setPointerCapture(e.pointerId); }catch(_){}
+      cur={c:pen,w:penW(),e:rubber?1:0,p:pt(c,e)}; D.layers[i].push(cur); drawLayer(i); });
+    c.addEventListener("pointermove",e=>{ if(!cur||i!==dl) return; e.preventDefault(); const q=pt(c,e), p=cur.p, n=p.length;
+      if(q[0]===p[n-2]&&q[1]===p[n-1]) return; const x=ctx(c);
+      if(x){ style(x,c,cur); x.beginPath(); x.moveTo(p[n-2]*c.width,p[n-1]*c.height); x.lineTo(q[0]*c.width,q[1]*c.height); x.stroke(); }
+      p.push(q[0],q[1]); });
+    const end=()=>{ if(!cur) return; cur=null; dUndo.push({t:"add",l:i}); if(dUndo.length>400) dUndo.shift(); drawLayer(i); paint(); save(); };
+    c.addEventListener("pointerup",end); c.addEventListener("pointercancel",end);
+  }
+  function syncCanvases(){
+    while(cvs.length<D.layers.length){ const c=document.createElement("canvas"); c.className="ink"; wrap.appendChild(c); bind(c,cvs.length); fit(c); cvs.push(c); }
+    while(cvs.length>D.layers.length) cvs.pop().remove();
+    if(dl>=D.layers.length) dl=0;
+  }
+  function drawLayer(i){ const c=cvs[i]; if(!c) return; const x=ctx(c); c.style.display=D.vis[i]?"":"none"; if(!x) return;
+    x.globalCompositeOperation="source-over"; x.clearRect(0,0,c.width,c.height);
+    for(const s of D.layers[i]){ style(x,c,s); const p=s.p; x.beginPath(); x.moveTo(p[0]*c.width,p[1]*c.height);
+      if(p.length===2) x.lineTo(p[0]*c.width+.01,p[1]*c.height);
+      for(let j=2;j<p.length;j+=2) x.lineTo(p[j]*c.width,p[j+1]*c.height); x.stroke(); } }
+  function drawAll(){ syncCanvases(); for(let i=0;i<cvs.length;i++) drawLayer(i); }
+  function sizeCanvases(){ syncCanvases(); cvs.forEach(fit); for(let i=0;i<cvs.length;i++) drawLayer(i); paintDot(); }
+  if(window.ResizeObserver) new ResizeObserver(sizeCanvases).observe(wrap); else window.addEventListener("resize",sizeCanvases);
+
+  const pens=$("#pens");
+  PEN_NAME.forEach((nm,k)=>{ const b=document.createElement("button"); b.className="sw"; b.dataset.pen=k; b.setAttribute("aria-label",nm+"色的筆");
+    b.onclick=()=>{ pen=k; rubber=false; paint(); }; pens.appendChild(b); });
+  $("#rubber").onclick=()=>{ rubber=!rubber; paint(); };
+  $("#penW").oninput=e=>{ penV=+e.target.value; paintDot(); };
+  function paintDot(){ const d=$("#dot"), w=wrap.getBoundingClientRect().width||400, px=Math.max(2,Math.round(penW()*w)); d.style.width=px+"px"; d.style.height=px+"px";
+    d.style.background=rubber?"var(--muted)":pal()[pen]; }
+  const layersEl=$("#layers");
+  function buildLayerUI(){
+    layersEl.querySelectorAll(".lay,#addLayer").forEach(e=>e.remove());
+    for(let i=0;i<D.layers.length;i++){ const g=document.createElement("div"); g.className="lay";
+      const a=document.createElement("button"); a.className="seg"; a.dataset.layer=i; a.textContent=i+1; a.setAttribute("aria-label","畫在圖層 "+(i+1));
+      a.onclick=()=>{ dl=i; D.vis[i]=true; drawLayer(i); paint(); save(); };
+      const v=document.createElement("button"); v.className="seg"; v.dataset.eye=i;
+      v.onclick=()=>{ D.vis[i]=!D.vis[i]; drawLayer(i); paint(); save(); };
+      g.appendChild(a); g.appendChild(v); layersEl.appendChild(g); }
+    if(D.layers.length<MAXL){ const b=document.createElement("button"); b.className="seg"; b.id="addLayer"; b.textContent="＋ 加一層";
+      b.onclick=()=>{ D.layers.push([]); D.vis.push(true); dl=D.layers.length-1; drawAll(); paint(); save(); }; layersEl.appendChild(b); }
+    builtLayers=D.layers.length;
+  }
+  $("#clearLayer").onclick=()=>{ if(!D.layers[dl].length) return; dUndo.push({t:"clear",l:dl,s:D.layers[dl]}); D.layers[dl]=[]; drawLayer(dl);
+    say("圖層 "+(dl+1)+" 清空了。按「退一步」可以救回來。"); paint(); save(); };
+  function doodleUndo(){ const op=dUndo.pop(); if(!op) return; if(!D.layers[op.l]){ paint(); return; }
+    if(op.t==="add") D.layers[op.l].pop(); else D.layers[op.l]=op.s; drawLayer(op.l); paint(); save(); }
+  function paintDoodle(){
+    syncCanvases(); if(builtLayers!==D.layers.length) buildLayerUI();
+    const draw=mode==="draw"; wrap.classList.toggle("draw",draw); $("#pad").classList.toggle("draw",draw);
+    cvs.forEach((c,i)=>c.classList.toggle("active",i===dl));
+    $("#modeDraw").setAttribute("aria-pressed",draw);
+    document.querySelectorAll("[data-pen]").forEach(b=>{ b.style.setProperty("--c",pal()[+b.dataset.pen]); b.setAttribute("aria-pressed",!rubber&&+b.dataset.pen===pen); });
+    $("#rubber").setAttribute("aria-pressed",rubber); $("#penW").value=penV; paintDot();
+    document.querySelectorAll("[data-layer]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.layer===dl));
+    document.querySelectorAll("[data-eye]").forEach(b=>{ const on=D.vis[+b.dataset.eye]; b.textContent=on?"看得到":"藏著"; b.setAttribute("aria-pressed",on); });
+    if(draw) $("#undo").disabled=!dUndo.length;
+  }
+
+  // ---------- 動作 ----------
+  function push(){ undo.push({vals:S.vals.slice(),marks:S.marks.slice(),fill:S.fill.slice()}); if(undo.length>300) undo.shift(); }
+  function touchable(){ if(!S||S.done) return false;
+    if(sel<0){ say("先點一格。"); return false; }
+    if(sel in S.givens){ say("這格是題目給的，不能改。"); return false; } return true; }
+  function input(d){
+    if(!touchable()) return; const n=S.n;
+    if(mode==="mark"&&S.vals[sel]){ say("這格已經填了樓高。要做標記，先擦掉。"); return; }
+    push(); S.started=true; bad.delete(sel);
+    if(mode==="fill"){
+      if(S.vals[sel]===d) S.vals[sel]=0;
+      else{ S.vals[sel]=d; S.marks[sel]=0;
+        if(prefs.auto){ const r=(sel/n)|0, c=sel%n; for(let i=0;i<n;i++){ S.marks[r*n+i]&=~(1<<d); S.marks[i*n+c]&=~(1<<d); } } }
+    } else S.marks[sel]^=(1<<d);
+    say(""); after();
+  }
+  function after(){
+    const n=S.n;
+    if(S.vals.every(v=>v)){
+      if(S.vals.every((v,k)=>v===S.sol[k])){ S.done=true; sel=-1; bad.clear();
+        say(`蓋好了。用時 ${fmt(S.elapsed)}，檢查 ${S.checks} 次。`,"ok"); }
+      else say("填滿了，但有地方不對。想知道是哪幾格，按「檢查」。","no");
+    }
+    paint(); save();
+  }
+  $("#erase").onclick=()=>{ if(!touchable()) return; if(!S.vals[sel]&&!S.marks[sel]) return; push(); S.vals[sel]=0; S.marks[sel]=0; bad.delete(sel); say(""); after(); };
+  $("#undo").onclick=()=>{ if(mode==="draw"){ doodleUndo(); return; } if(!S||S.done||!undo.length) return; const u=undo.pop(); S.vals=u.vals; S.marks=u.marks; if(u.fill) S.fill=u.fill; bad.clear(); say("退了一步。"); paint(); save(); };
+  $("#check").onclick=()=>{ if(!S||S.done) return; S.checks++; bad=new Set();
+    S.vals.forEach((v,k)=>{ if(v&&v!==S.sol[k]) bad.add(k); });
+    const filled=S.vals.filter(v=>v).length;
+    if(bad.size) say(`有 ${bad.size} 格不對，用紅框標出來了。`,"no");
+    else say(filled?`填了 ${filled} 格，目前都對。`:"還沒填任何一格。","ok");
+    paint(); save(); };
+  $("#modeFill").onclick=()=>{ mode="fill"; paint(); };
+  $("#modeMark").onclick=()=>{ mode="mark"; paint(); };
+  $("#modePaint").onclick=()=>{ mode="paint"; say("塗格子：選底色，再點格子。"); paint(); };
+  FILL_NAME.forEach((nm,i)=>{ const b=document.createElement("button"); b.className="fsw"; b.dataset.fill=i+1; b.setAttribute("aria-label",nm+"色底");
+    b.onclick=()=>{ fillPick=i+1; paint(); }; $("#fillRow").appendChild(b); });
+  function paintCell(k){ if(!S) return; push(); S.fill[k]=S.fill[k]===fillPick?0:fillPick; paint(); save(); }
+  $("#clearFills").onclick=()=>{ if(!S||!S.fill.some(v=>v)) return; push(); S.fill.fill(0); say("底色全部清掉了。按「退一步」可以救回來。"); paint(); save(); };
+  $("#modeDraw").onclick=()=>{ mode="draw"; say("塗鴉：直接在棋盤上畫。要填數字，切回「填樓高」。"); paint(); };
+  $("#auto").onchange=e=>{ prefs.auto=e.target.checked; save(); };
+  $("#tint").onchange=e=>{ prefs.tint=e.target.checked; paint(); save(); };
+
+  document.addEventListener("keydown",e=>{
+    if(!S||e.metaKey||e.altKey) return; const n=S.n;
+    if((e.ctrlKey)&&e.key.toLowerCase()==="z"){ e.preventDefault(); $("#undo").click(); return; }
+    if(e.ctrlKey) return;
+    const mv={ArrowUp:-n,ArrowDown:n,ArrowLeft:-1,ArrowRight:1}[e.key];
+    if(mv!==undefined){ e.preventDefault();
+      if(sel<0){ sel=0; } else { const r=(sel/n)|0,c=sel%n;
+        if(e.key==="ArrowLeft"&&c>0||e.key==="ArrowRight"&&c<n-1||e.key==="ArrowUp"&&r>0||e.key==="ArrowDown"&&r<n-1) sel+=mv; }
+      paint(); return; }
+    if(e.key===" "){ e.preventDefault(); mode=mode==="fill"?"mark":"fill"; paint(); return; }
+    if(mode==="draw"||mode==="paint") return;
+    if(e.key==="Backspace"||e.key==="Delete"){ e.preventDefault(); $("#erase").click(); return; }
+    const d=parseInt(e.key,10); if(d>=1&&d<=n){ e.preventDefault(); input(d); }
+  });
+
+  setInterval(()=>{ if(S&&S.started&&!S.done&&document.visibilityState==="visible"){ S.elapsed++; $("#clock").textContent=fmt(S.elapsed); if(S.elapsed%5===0) save(); } },1000);
+
+  if(load()){ paintSetup(); buildBoard(); paint(); sizeCanvases();
+    say(S.done?`這題已經蓋好了。用時 ${fmt(S.elapsed)}。`:"接著上次的進度。"); }
+  else { paintSetup(); newPuzzle(); }
+})();
+</script>
+</body>
+</html>
